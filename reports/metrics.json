@@ -1,0 +1,24 @@
+{
+  "test": {
+    "threshold": 0.5,
+    "samples": 3399,
+    "accuracy": 0.9917622830244189,
+    "precision": 0.9893899204244032,
+    "recall": 0.9920212765957447,
+    "specificity": 0.99155672823219,
+    "f1": 0.9907038512616202,
+    "roc_auc": 0.9993886136529502,
+    "confusion_matrix": {
+      "tn": 1879,
+      "fp": 16,
+      "fn": 12,
+      "tp": 1492
+    }
+  },
+  "best_epoch": 10,
+  "epochs_trained": 10,
+  "train_loss": 0.01715356484055519,
+  "train_accuracy": 0.99431973695755,
+  "val_loss": 0.015210175886750221,
+  "val_accuracy": 0.9947053790092468
+}

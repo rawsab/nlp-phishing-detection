@@ -5,17 +5,6 @@ import keras
 from phishing_detector.config import EMBEDDING_DIM, MAX_SEQUENCE_LENGTH
 
 
-@keras.saving.register_keras_serializable(package="phishing_detector")
-def legacy_hard_sigmoid(x):
-    """Keras 2.x ``hard_sigmoid`` (slope 0.2).
-
-    Keras 3 redefined ``hard_sigmoid`` with a slope of 1/6, so the pretrained
-    model, whose LSTMs were trained with the Keras 2 version, needs this to
-    reproduce its original outputs.
-    """
-    return keras.ops.clip(0.2 * x + 0.5, 0.0, 1.0)
-
-
 def build_model(
     vocab_size: int,
     max_length: int = MAX_SEQUENCE_LENGTH,

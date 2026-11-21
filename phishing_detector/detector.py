@@ -34,8 +34,6 @@ class PhishingDetector:
     ) -> "PhishingDetector":
         import keras
 
-        import phishing_detector.model  # noqa: F401  registers custom objects used by the model
-
         model = keras.models.load_model(model_path)
         return cls(model, CharTokenizer.load(tokenizer_path))
 

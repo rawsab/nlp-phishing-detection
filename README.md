@@ -35,7 +35,36 @@ directly from data.
 - **Tested and linted:** a pytest suite covering the tokenizer, data split, metrics and API, with
   [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
 
-<!-- RESULTS: filled in from reports/metrics.json once training finishes. -->
+## Results
+
+The held-out test set contained 3,399 URLs. The classifier used a decision threshold of 0.5.
+
+| Test-set metric |  Value |
+| --------------- | -----: |
+| Accuracy        | 0.9918 |
+| Precision       | 0.9894 |
+| Recall          | 0.9920 |
+| F1              | 0.9907 |
+| ROC AUC         | 0.9994 |
+| Specificity     | 0.9916 |
+
+Validation loss was lowest at epoch 10 of 10.
+
+| Split      |   Loss | Accuracy |
+| ---------- | -----: | -------: |
+| Training   | 0.0172 |   0.9943 |
+| Validation | 0.0152 |   0.9947 |
+
+<p align="center">
+  <img src="reports/training_curves.png" alt="Training and validation loss and accuracy over 10 epochs" width="100%">
+</p>
+<p align="center">
+  <img src="reports/roc_curve.png" alt="Test-set ROC curve with the 0.5 threshold marked" width="48%">
+  <img src="reports/confusion_matrix.png" alt="Test-set confusion matrix showing 16 false positives and 12 false negatives" width="48%">
+</p>
+
+The benign examples come from a small number of hosts, so these scores overstate how well the model
+handles unseen sites. See [Limitations and Future Work](#limitations-and-future-work).
 
 ## Model Architecture
 
@@ -99,7 +128,7 @@ python -m phishing_detector.client "http://paypal-account-verify.secure-login.xy
 ```json
 {
   "url": "http://paypal-account-verify.secure-login.xyz/webscr/cmd=login",
-  "malicious_probability": 0.9966,
+  "malicious_probability": 0.9999,
   "is_malicious": true,
   "verdict": "The URL is likely to be malicious.",
   "warning": null
@@ -178,7 +207,9 @@ message.
 
 - **Narrow benign data.** Over 80% of the 38k benign URLs come from just 10 hosts (for example
   `support.office.com`, `store.apple.com` and `plus.google.com`). Test-set scores therefore overstate
-  how well the model handles legitimate sites it has rarely seen, and it is prone to flagging them.
+  how well the model handles legitimate sites it has rarely seen. The model flags both the PhishTank
+  FAQ (`https://phishtank.org/faq.php`) and Wikipedia's phishing article
+  (`https://en.wikipedia.org/wiki/Phishing`) as malicious.
 - **Few base URLs.** Fewer than 4% of benign examples are bare domains, so the API attaches a warning
   to predictions for them.
 - **Dated phishing data.** The phishing URLs are from 2018, and phishing tactics have changed since.
