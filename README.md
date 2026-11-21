@@ -5,6 +5,8 @@
 ![Flask](https://img.shields.io/badge/Flask-REST%20API-000000?logo=flask&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-evaluation-F7931E?logo=scikitlearn&logoColor=white)
 
+*Originally built in January 2024, and updated more recently to improve the documentation.*
+
 A deep learning system that detects phishing URLs. A character-level **bidirectional LSTM** network,
 trained on verified phishing reports from [PhishTank](https://phishtank.org/), scores each URL, and a
 **Flask REST API** serves the predictions.
