@@ -1,0 +1,17 @@
+[project]
+name = "phishing-detector"
+version = "1.0.0"
+description = "Character-level BiLSTM classifier for detecting phishing URLs, served over a Flask REST API."
+readme = "README.md"
+authors = [{ name = "Rawsab Said" }]
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]

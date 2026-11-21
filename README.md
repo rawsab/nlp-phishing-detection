@@ -1,40 +1,185 @@
-# 🕵️ Malicious URL Detection System
+# BiLSTM Phishing URL Detector
 
-![python](https://img.shields.io/badge/Python-3.6.7-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-Keras%203-FF6F00?logo=tensorflow&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-REST%20API-000000?logo=flask&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-evaluation-F7931E?logo=scikitlearn&logoColor=white)
 
-A binary classification model to detect malicious URLs using a Bidirectional LSTM network. In response to the prevalent cyber-threat of phishing attacks, this project applies deep learning to natural language processing (NLP) to effectively detect potential phishing attacks.
+A deep learning system that detects phishing URLs. A character-level **bidirectional LSTM** network,
+trained on verified phishing reports from [PhishTank](https://phishtank.org/), scores each URL, and a
+**Flask REST API** serves the predictions.
 
-<!--
+Phishing links often imitate legitimate ones with small character-level tricks: misspelled brand names,
+unusual top-level domains, deeply nested subdomains, or long encoded paths. Instead of hand-crafted
+features or blocklists, this model reads the raw URL one character at a time and learns these patterns
+directly from data.
+
 <p align="center">
-  <img width="400" src="https://mermaid.ink/img/pako:eNqFk01v2zAMhv8KoXMyrCk2DB4wILHTryVAMbs9zM6BtRhbiCx5khwgK_rfq0jevEswnSSK70OKpF5ZrTmxhDUG-xaK7GulwK9lmaFDSLWUVDuhVQJPPzYWUHHY4AtJC3ujO3hshW0LVIcdzOffYFUW-kBK_MaoSbU6knFR6zTk9GsgVZPdxTCroErLR-RcqCaBtbKDIVhKOfkCekuOHcGGVOPaUZsGbVYWBoWaP6MUPESFvJfCjU5ZcFqX6-6FQgif_YnMlNkUxaeXkbIEz_7F2vxJcR0IN-VKcGFiLVDCJi-2EQVXCSw-fYYnJZydQWZ0rwcHHz9cj4CbALi9DFj8B3AbAHeXAdcJXC2-XAbcBcB9GZ83FiAXTacFh6UHHmPh9trASig0J0glWiv2og43I-c-cB5ixWO70MgT5E73_bm25-nY-nmSkLZUH3otlPP2Uf4Q5N_LqVUecEQ5oCPw4f9tIbkdm7GOTIeC-_F8PSMq5lrqqGKJ33I0h4pV6s374eB0flI1S5wZaMaMHpqWJXuU1p-G3lMpE-hnvPtr7VH91Ho6Exe-69v4G8KneHsH3WwEIA?type=png">
+  <img src="https://github.com/user-attachments/assets/a9d181e7-3498-4fba-9cfe-524390ddad8a"
+       alt="System architecture: PhishTank data is tokenized, padded and split, embedded, passed through three bidirectional LSTM layers, and reduced by a dense sigmoid layer to a malicious-URL probability"
+       width="900">
 </p>
--->
 
-![nlp_maliciousurldetect_diagram_rawsab](https://github.com/user-attachments/assets/a9d181e7-3498-4fba-9cfe-524390ddad8a)
+## Highlights
 
+- **End-to-end ML pipeline:** data loading, character-level tokenization, training with early stopping
+  and checkpointing, held-out evaluation, and model serving.
+- **Sequence model built for raw text:** three stacked bidirectional LSTM layers over learned character
+  embeddings, with about 3.0M parameters.
+- **Reproducible evaluation:** a seeded train/validation/test split, with the test set rebuilt exactly
+  at evaluation time to report accuracy, precision, recall, F1, ROC AUC and a confusion matrix.
+- **Production-style serving:** a REST API with input validation, a health check and structured JSON
+  responses, plus a command-line client.
+- **Tested and linted:** a pytest suite covering the tokenizer, data split, metrics and API, with
+  [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
 
-## ⚙️ Requirements
+<!-- RESULTS: filled in from reports/metrics.json once training finishes. -->
 
-[Install python](https://www.python.org/downloads/) and the required libraries (must have [pip](https://packaging.python.org/en/latest/tutorials/installing-packages/) installed). Ensure that the repository is downloaded and the command is run in the appropriate directory:
+## Model Architecture
+
+Each URL is lowercased, mapped character by character to integer ids, and left-padded or truncated to
+128 characters. A learned embedding turns each character into a 128-dimensional vector. Three stacked
+bidirectional LSTMs read the sequence in both directions, so each layer sees what comes before and
+after every character. A sigmoid unit then outputs the probability that the URL is malicious.
+
+| Layer                                | Output shape | Parameters |
+| ------------------------------------ | ------------ | ---------: |
+| Embedding (70-character vocabulary)  | (128, 128)   |      8,960 |
+| Bidirectional LSTM, 256 units        | (128, 512)   |    788,480 |
+| Bidirectional LSTM, 256 units        | (128, 512)   |  1,574,912 |
+| Bidirectional LSTM, 128 units        | (256)        |    656,384 |
+| Dense, sigmoid                       | (1)          |        257 |
+| **Total**                            |              |  **3,028,993** |
+
+Each LSTM layer uses 30% dropout on its inputs and on its recurrent state. Training uses the Adam
+optimizer with binary cross-entropy loss, and early stopping on validation loss with a patience of
+2 epochs.
+
+## Dataset
+
+| Source                                                              | Label     |   URLs |
+| ------------------------------------------------------------------- | --------- | -----: |
+| [`phishtank_malicious_urls.csv`](data/phishtank_malicious_urls.csv) | Malicious | 29,769 |
+| [`benign_urls.txt`](data/benign_urls.txt)                           | Benign    | 38,228 |
+
+The malicious URLs are verified submissions from a PhishTank export (October 2018). The benign URLs
+come from a whitelist of legitimate pages. Duplicates are removed, and a URL that appears in both
+sources is labelled benign. The data is split with a fixed seed into **80% training, 15% validation and
+5% test**.
+
+## Getting Started
+
+Requires Python 3.10 or later.
+
+```bash
+git clone https://github.com/rawsab/BiLSTM-Phishing-Detector.git
+cd BiLSTM-Phishing-Detector
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Usage
+
+### Serve predictions
+
+```bash
+python -m phishing_detector.api              # http://localhost:45000
+```
+
+In a second terminal, classify a URL with the included client:
+
+```bash
+python -m phishing_detector.client "http://paypal-account-verify.secure-login.xyz/webscr/cmd=login"
+```
+
+```json
+{
+  "url": "http://paypal-account-verify.secure-login.xyz/webscr/cmd=login",
+  "malicious_probability": 0.9966,
+  "is_malicious": true,
+  "verdict": "The URL is likely to be malicious.",
+  "warning": null
+}
+```
+
+or call the API directly:
+
+```bash
+curl -X POST http://localhost:45000/predict \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://www.google.com"}'
+```
+
+### Train and evaluate
+
+```bash
+python -m phishing_detector.train        # writes models/
+python -m phishing_detector.evaluate     # writes reports/
+```
+
+Training saves the best checkpoint, the fitted tokenizer and the per-epoch history to `models/`.
+Evaluation rebuilds the exact test split from that history and writes `metrics.json` plus training
+curve, ROC curve and confusion matrix plots to `reports/`. Training is much faster on a GPU. If the GPU
+runs out of memory, lower `--batch-size` (default 256).
+
+### Run the tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+ruff check .
+```
+
+## API Reference
+
+| Method | Endpoint   | Description                                    |
+| ------ | ---------- | ---------------------------------------------- |
+| `GET`  | `/health`  | Returns `{"status": "ok"}` when the API is up  |
+| `POST` | `/predict` | Classifies the URL in the body `{"url": "..."}` |
+
+| Response field          | Type           | Description                                                   |
+| ----------------------- | -------------- | ------------------------------------------------------------- |
+| `url`                   | string         | The URL that was classified                                   |
+| `malicious_probability` | float          | Model output in `[0, 1]`                                      |
+| `is_malicious`          | bool           | `true` if the probability is at least 0.5                     |
+| `verdict`               | string         | Human-readable result                                         |
+| `warning`               | string \| null | Set for base URLs (no path or query), where accuracy is lower |
+
+A missing, empty or non-string `url`, or one longer than 2,048 characters, returns `400` with an `error`
+message.
+
+## Project Structure
 
 ```
-$ pip install -r install-libraries.txt
+├── data/                          Training data (PhishTank export + benign whitelist)
+├── models/                        Trained model, tokenizer vocabulary, training history
+├── reports/                       Evaluation metrics and figures
+├── phishing_detector/
+│   ├── api.py                     Flask REST API
+│   ├── client.py                  Command-line client for the API
+│   ├── config.py                  Paths, hyperparameters and split settings
+│   ├── data.py                    Dataset loading and train/validation/test split
+│   ├── detector.py                Inference wrapper (tokenizer + model)
+│   ├── evaluate.py                Test-set metrics and plots
+│   ├── model.py                   BiLSTM architecture
+│   ├── tokenizer.py               Character-level tokenizer
+│   └── train.py                   Training script
+├── tests/                         pytest suite
+├── requirements.txt
+└── requirements-dev.txt
 ```
 
-## 🖥️ Running the System
+## Limitations and Future Work
 
-Once the model is downloaded (updated .h5 model will be uploaded soon), run the following:
-```
-$ python flask_rest_api.py
-```
+- **Narrow benign data.** Over 80% of the 38k benign URLs come from just 10 hosts (for example
+  `support.office.com`, `store.apple.com` and `plus.google.com`). Test-set scores therefore overstate
+  how well the model handles legitimate sites it has rarely seen, and it is prone to flagging them.
+- **Few base URLs.** Fewer than 4% of benign examples are bare domains, so the API attaches a warning
+  to predictions for them.
+- **Dated phishing data.** The phishing URLs are from 2018, and phishing tactics have changed since.
 
-Next, open a new tab or window and run the following, replacing https://phishtank.org/faq.php with a URL (non-base URL) of your choice:
-```
-$ python3 flask_request.py -u https://www.https://phishtank.org/faq.php
-```
-
-Expected Output:
-```
-$ [{'Prediction Result': 3.228831036385466, 'Malicious URL Probability': 'The URL provided is not likely to be malicious.', 'url': ' https://phishtank.org/faq.php'}]
-
-```
+Next steps would be a broader benign corpus (for example the [Tranco](https://tranco-list.eu/) top-sites
+list plus crawled pages), recent phishing feeds, a domain-disjoint test split to measure generalization
+to unseen sites, and calibrating the decision threshold on held-out data.
