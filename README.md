@@ -1,4 +1,4 @@
-# BiLSTM Phishing URL Detector
+# NLP Phishing Detection
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-Keras%203-FF6F00?logo=tensorflow&logoColor=white)
@@ -15,8 +15,8 @@ features or blocklists, this model reads the raw URL one character at a time and
 directly from data.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/a9d181e7-3498-4fba-9cfe-524390ddad8a"
-       alt="System architecture: PhishTank data is tokenized, padded and split, embedded, passed through three bidirectional LSTM layers, and reduced by a dense sigmoid layer to a malicious-URL probability"
+  <img src="docs/architecture-paper-dark.png"
+       alt="System architecture: (a) PhishTank and benign URLs are deduplicated, tokenized by character, padded to 128 and split; (b) characters are embedded as 128-dimensional vectors; (c) three stacked bidirectional LSTM layers encode the sequence, and the final forward and backward states are concatenated into a 256-dimensional vector; (d) a dense sigmoid layer outputs the phishing probability; (e) training uses Adam, binary cross-entropy and early stopping; (f) a Flask REST API serves predictions"
        width="900">
 </p>
 
@@ -72,8 +72,8 @@ sources is labelled benign. The data is split with a fixed seed into **80% train
 Requires Python 3.10 or later.
 
 ```bash
-git clone https://github.com/rawsab/BiLSTM-Phishing-Detector.git
-cd BiLSTM-Phishing-Detector
+git clone https://github.com/rawsab/nlp-phishing-detection.git
+cd nlp-phishing-detection
 
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -154,6 +154,7 @@ message.
 
 ```
 ├── data/                          Training data (PhishTank export + benign whitelist)
+├── docs/                          Architecture diagrams and the script that generates them
 ├── models/                        Trained model, tokenizer vocabulary, training history
 ├── reports/                       Evaluation metrics and figures
 ├── phishing_detector/
