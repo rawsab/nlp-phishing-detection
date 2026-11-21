@@ -37,6 +37,8 @@ directly from data.
 
 ## Results
 
+The released model was trained on an NVIDIA T4 GPU.
+
 The held-out test set contained 3,399 URLs. The classifier used a decision threshold of 0.5.
 
 | Test-set metric |  Value |
