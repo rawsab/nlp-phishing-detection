@@ -56,11 +56,12 @@ Validation loss was lowest at epoch 10 of 10.
 | Validation | 0.0152 |   0.9947 |
 
 <p align="center">
-  <img src="reports/training_curves.png" alt="Training and validation loss and accuracy over 10 epochs" width="100%">
+  <img src="reports/dark/loss.png" alt="Training and validation loss over 10 epochs" width="48%">
+  <img src="reports/dark/accuracy.png" alt="Training and validation accuracy over 10 epochs" width="48%">
 </p>
 <p align="center">
-  <img src="reports/roc_curve.png" alt="Test-set ROC curve with the 0.5 threshold marked" width="48%">
-  <img src="reports/confusion_matrix.png" alt="Test-set confusion matrix showing 16 false positives and 12 false negatives" width="48%">
+  <img src="reports/dark/roc_curve.png" alt="Test-set ROC curve with the 0.5 threshold marked" width="48%">
+  <img src="reports/dark/confusion_matrix.png" alt="Test-set confusion matrix showing 16 false positives and 12 false negatives" width="48%">
 </p>
 
 The benign examples come from a small number of hosts, so these scores overstate how well the model
